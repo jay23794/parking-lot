@@ -7,16 +7,17 @@ export class ParkingService {
     constructor(private repo: ParkingReposiory) { }
 
     async create(ticket: ITicketDetail) {
-        await this.repo.createTicket(ticket)
+          return await this.repo.createTicket(ticket)
     }
 
-    async getTicketById(id: string) {
+    async getTicketById(id: string): Promise<ITicketDetail> {
         if (!id) throw new ValidationError('ID required');
 
         const ticket = await this.repo.findTicketById(id)
         if (!ticket) {
             throw new NotFoundError();
         }
+        return ticket
     }
 
     async checkout(id: string) {
