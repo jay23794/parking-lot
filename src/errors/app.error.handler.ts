@@ -1,41 +1,53 @@
 import { Request, Response, NextFunction } from "express";
+import { AppError } from "./app.errors";
+
+interface ErrorResponse {
+    success: false;
+    message: string;
+    statusCode: number;
+    stack?: string;
+    errors?: any;
+}
 
 
 export const errorHandler = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction
+    err: Error | AppError,
+    req: Request,
+    res: Response,
+    next: NextFunction
 ) => {
+    let error = err;
+    // Convert non-AppError to AppError
+    if (!(error instanceof AppError)) {
+        const statusCode = 500;
+        const message = error.message || 'Internal Server Error';
+        error = new AppError(message, statusCode, false);
+    }
 
-  let statusCode = err.statusCode || 500;
-  let message = err.message || "Internal Server Error";
+    const appError = error as AppError;
+    const isProduction = process.env.NODE_ENV === 'production';
 
-  // Mongo invalid ObjectId
-  if (err.name === "CastError") {
-    statusCode = 400;
-    message = "Invalid ID format";
-  }
+    const response: ErrorResponse = {
+        success: false,
+        message: appError.message,
+        statusCode: appError.statusCode,
+    };
 
-  // Mongo duplicate key
-  if (err.code === 11000) {
-    statusCode = 409;
-    message = "Duplicate field value";
-  }
+    // Include stack trace in development
+    if (!isProduction) {
+        response.stack = appError.stack;
+    }
+    console.error('ERROR 💥:', {
+        message: appError.message,
+        statusCode: appError.statusCode,
+        stack: appError.stack,
+        isOperational: appError.isOperational,
+    });
 
-  // Mongoose validation error
-  if (err.name === "ValidationError") {
-    statusCode = 400;
-    message = Object.values(err.errors)
-      .map((val: any) => val.message)
-      .join(", ");
-  }
+    // Send error to monitoring service in production (e.g., Sentry)
+    if (isProduction && !appError.isOperational) {
+        // Sentry.captureException(appError);
+    }
 
-  console.error("🔥 ERROR:", err);
-
-  res.status(statusCode).json({
-    success: false,
-    message,
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-  });
+    res.status(appError.statusCode).json(response);
 };

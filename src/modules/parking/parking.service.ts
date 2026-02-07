@@ -1,4 +1,5 @@
-import { AppError } from "../../errors/app.errors";
+import { NotFoundError, ValidationError } from "../../errors";
+
 import { ParkingReposiory } from "./parking.repo";
 import { ITicketDetail } from "./parking.types";
 
@@ -10,13 +11,12 @@ export class ParkingService {
     }
 
     async getTicketById(id: string) {
-        const ticket = await this.repo.findTicketById(id)
-        
-        if (!ticket) {
-            throw new AppError("Ticket not found", 404);
-        }
+        if (!id) throw new ValidationError('ID required');
 
-        return ticket;
+        const ticket = await this.repo.findTicketById(id)
+        if (!ticket) {
+            throw new NotFoundError();
+        }
     }
 
     async checkout(id: string) {

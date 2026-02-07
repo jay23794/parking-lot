@@ -1,11 +1,11 @@
 import { Document } from "mongoose";
 
 export enum VehicleType {
-    Car = "car",
-    Bike = "bike"
+    Car = "CAR",
+    Bike = "BIKE"
 }
 export interface ITicketDetail extends Document{
-    id: string
+    id?: string
     checkIn: Date
     checkOut:Date
     floor: string
