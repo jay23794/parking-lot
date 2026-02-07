@@ -1,3 +1,4 @@
+import { AppError } from "../../errors/app.errors";
 import { ParkingReposiory } from "./parking.repo";
 import { ITicketDetail } from "./parking.types";
 
@@ -9,13 +10,18 @@ export class ParkingService {
     }
 
     async getTicketById(id: string) {
-       const ticket = await this.repo.findTicketById(id)
-       if (!ticket) throw new Error("No ticket found");
+        const ticket = await this.repo.findTicketById(id)
+        
+        if (!ticket) {
+            throw new AppError("Ticket not found", 404);
+        }
+
+        return ticket;
     }
 
-     async checkout(id: string) {
+    async checkout(id: string) {
         // calculate amount
-        await this.repo.checkoutTicket(id,50)
+        await this.repo.checkoutTicket(id, 50)
     }
 
 

@@ -2,6 +2,8 @@
 
 import express, { Application, Request, Response } from "express";
 import routes from "./routes";
+import { errorHandler } from "./errors/app.error.handler";
+import { AppError } from "./errors/app.errors";
 
 
 const app: Application = express();
@@ -18,24 +20,10 @@ app.get("/", (req: Request, res: Response) => {
 /* -------------------- Routes -------------------- */
 app.use("/api/v1", routes);
 
-/* -------------------- 404 Handler -------------------- */
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
+app.use((req, res, next) => {
+  next(new AppError(`Route ${req.originalUrl} not found`, 404));
 });
 
-
-
-
-/* -------------------- Global Error Handler -------------------- */
-app.use((err: Error, req: Request, res: Response, next: Function) => {
-  console.error(err);
-  res.status(500).json({
-    success: false,
-    message: "Internal Server Error",
-  });
-});
+app.use(errorHandler)
 
 export default app;
