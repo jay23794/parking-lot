@@ -7,20 +7,22 @@ export class ParkingConfigRepo {
         try {
             await ParkingConfigModel.create(config)
         } catch (error) {
+            console.log("---");
+            
             throw handleMongooseError(error)
         }
     }
-    async findById(id: string) {
+    async findById(id: string):Promise<IParkingConfig> {
         try {
-            await ParkingConfigModel.findById(id)
+          return await ParkingConfigModel.findById(id) as IParkingConfig
         } catch (error) {
             throw handleMongooseError(error)
         }
     }
 
-    async findAll() {
+    async findAll():Promise<IParkingConfig[]> {
         try {
-            await ParkingConfigModel.find({})
+           return await ParkingConfigModel.find({})
         } catch (error) {
             throw handleMongooseError(error)
         }
