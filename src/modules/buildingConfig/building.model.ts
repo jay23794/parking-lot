@@ -5,8 +5,8 @@ const ParkingConfigSchema = new Schema<IParkingConfig>({
     floorNumber:{ type: Number, required: true},
     maxCarCapasity: { type: Number, required: true,min:0 },
     maxBikeCapasity: { type: Number, required: true,min:0 },
-    totalBikesParked: { type: Number, required: true,default:0,min:0 },
-    totalCarParked: { type: Number, required: true,default:0,min:0 },    
+    totalBikesParked: { type: Number, required: true,default:0,min:[0,"No parked Bike(s)"] },
+    totalCarParked: { type: Number, required: true,default:0,min:[0,"No parked Car(s)"] },    
 
 })
 

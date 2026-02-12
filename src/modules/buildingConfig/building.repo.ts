@@ -8,34 +8,56 @@ export class ParkingConfigRepo {
             await ParkingConfigModel.create(config)
         } catch (error) {
             console.log("---");
-            
+
             throw handleMongooseError(error)
         }
     }
-    async findById(id: string):Promise<IParkingConfig> {
+    async findById(id: string): Promise<IParkingConfig> {
         try {
-          return await ParkingConfigModel.findById(id) as IParkingConfig
+            return await ParkingConfigModel.findById(id) as IParkingConfig
         } catch (error) {
             throw handleMongooseError(error)
         }
     }
 
-    async findAll():Promise<IParkingConfig[]> {
+    async findAll(): Promise<IParkingConfig[]> {
         try {
-           return await ParkingConfigModel.find({})
+            return await ParkingConfigModel.find({})
         } catch (error) {
             throw handleMongooseError(error)
         }
     }
 
-    async updateSpotForFloor(floorId: string, spot: number, vehicle: string) {
+    /*
+     * We use MongoDB’s aggregation pipeline update with $cond to perform conditional atomic updates. 
+     * This ensures correctness under high concurrency and prevents counters from going 
+     * below zero without needing transactions or locks.
+     */
+   async updateSpotForFloor(id: string, vehicle: string, spot: number,) {
         try {
-            await ParkingConfigModel.updateOne({
-                _id: floorId
-            }, {
-                $inc: { [vehicle]: spot }
 
-            })
+            await ParkingConfigModel.updateOne(
+                { _id: id },
+                [{
+                    $set: {
+                        [vehicle]: {
+                            $cond: [
+                                {
+                                    $and: [
+                                        { $lt: [spot, 0] },
+                                        { $lte: [`$${vehicle}`, 0] }
+                                    ]
+                                },
+                                 0,
+                                { $add: [`$${vehicle}`, spot] } 
+                            ],
+
+                        }
+                    }
+                }],
+                { updatePipeline: true }
+            )
+           
         } catch (error) {
             throw handleMongooseError(error)
         }
